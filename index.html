@@ -1,0 +1,240 @@
+<html>
+  <head>
+    <title>HTML5 Canvas Winning Wheel</title>
+    <link rel="stylesheet" href="styles.css" type="text/css" />
+    <script type="text/javascript" src="script.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+  </head>
+
+  <body>
+    <div align="center">
+      <div class="modal" id="myModal">
+        <div class="modal-content">
+          <h2>خوش آمدید</h2>
+          <input
+            type="number"
+            id="inputField"
+            placeholder="شماره تلفن خود را وارد کنید"
+          />
+          <button id="submitButton" onclick="submitForm()" disabled>
+            تایید
+          </button>
+        </div>
+      </div>
+
+      <br />
+
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td>
+            <div class="power_controls">
+              <br />
+              <br />
+              <!-- <table class="power" cellpadding="10" cellspacing="0">
+                                <tr>
+                                    <th align="center">Power</th>
+                                </tr>
+                                <tr>
+                                    <td width="78" align="center" id="pw3" onClick="powerSelected(3);">High</td>
+                                </tr>
+                                <tr>
+                                    <td align="center" id="pw2" onClick="powerSelected(2);">Med</td>
+                                </tr>
+                                <tr>
+                                    <td align="center" id="pw1" onClick="powerSelected(1);">Low</td>
+                                </tr>
+                            </table> -->
+              <br />
+              <img
+                id="spin_button"
+                src="spin_off.png"
+                alt="Spin"
+                onClick="startSpin();"
+              />
+              <br /><br />
+            </div>
+          </td>
+          <td
+            width="438"
+            height="582"
+            class="the_wheel"
+            align="center"
+            valign="center"
+          >
+            <canvas id="canvas" width="434" height="434">
+              <p style="color: white" align="center">
+                Sorry, your browser doesn't support canvas. Please try another.
+              </p>
+            </canvas>
+          </td>
+        </tr>
+      </table>
+      <div id="snackbar"><p id="toastMessage"></p></div>
+    </div>
+
+    <script>
+      // Create new wheel object specifying the parameters at creation time.
+
+      var phoneNumber = {};
+      var modal = document.getElementById("myModal");
+      var inputField = document.getElementById("inputField");
+      var submitButton = document.getElementById("submitButton");
+      const errors = document.getElementById("errors");
+
+      const check_phone = (number) => {
+        var regex = new RegExp("^(\\+98|0)?9\\d{9}$");
+        var result = regex.test(number);
+        return result;
+      };
+
+      inputField.addEventListener("input", function () {
+        // Enable the button only if the input is not empty
+        submitButton.disabled =
+          !inputField.value.trim() ||
+          check_phone(inputField.value) !== true ||
+          getData(inputField.value);
+      });
+
+      function submitForm() {
+        closeModal();
+      }
+
+      function openModal() {
+        modal.style.display = "flex";
+        inputField.focus();
+      }
+
+      function closeModal() {
+        modal.style.display = "none";
+      }
+
+      // Function to save data to localStorage
+      function saveData(key, value) {
+        localStorage.setItem(key, value);
+      }
+
+      // Function to retrieve data from localStorage
+      function getData(key) {
+        return localStorage.getItem(key);
+      }
+
+      function myToast(content) {
+        var x = document.getElementById("snackbar");
+        var toastMessage = document.getElementById("toastMessage");
+        toastMessage.textContent = content.text;
+        x.className = "show";
+        setTimeout(function () {
+          x.className = x.className.replace("show", "");
+        }, 3000);
+      }
+
+      // Prevent modal from closing when clicking outside the content
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+
+      document.addEventListener("keydown", function (e) {
+        // Close modal on Escape key press
+        if (e.key === "Escape") {
+          closeModal();
+        }
+      });
+
+      // Initial modal open
+      openModal();
+
+      let theWheel = new Winwheel({
+        numSegments: 8, // Specify number of segments.
+        outerRadius: 212, // Set outer radius so wheel fits inside the background.
+        textFontSize: 28, // Set font size as desired.
+        // Define segments including colour and text.
+        segments: [
+          { fillStyle: "#eae56f", text: "Prize 1" },
+          { fillStyle: "#89f26e", text: "Prize 2" },
+          { fillStyle: "#7de6ef", text: "Prize 3" },
+          { fillStyle: "#e7706f", text: "Prize 4" },
+          { fillStyle: "#eae56f", text: "Prize 5" },
+          { fillStyle: "#89f26e", text: "Prize 6" },
+          { fillStyle: "#7de6ef", text: "Prize 7" },
+          { fillStyle: "#e7706f", text: "Prize 8" },
+        ],
+        // Specify the animation to use.
+
+        animation: {
+          type: "spinToStop",
+          duration: 5, // Duration in seconds.
+          spins: 8, // Number of complete spins.
+          callbackFinished: alertPrize,
+        },
+      });
+
+      // Vars used by the code in this page to do power controls.
+      let wheelPower = 0;
+      let wheelSpinning = false;
+
+      // -------------------------------------------------------
+      // Function to handle the onClick on the power buttons.
+      // -------------------------------------------------------
+      // function powerSelected(powerLevel) {
+      //   // Ensure that power can't be changed while wheel is spinning.
+      //   if (wheelSpinning == false) {
+      //     // Light up the spin button by changing it's source image and adding a clickable class to it.
+      //   }
+      // }
+
+      // -------------------------------------------------------
+      // Click handler for spin button.
+      // -------------------------------------------------------
+
+      document.getElementById("spin_button").src = "spin_on.png";
+      document.getElementById("spin_button").className = "clickable";
+
+      function startSpin() {
+        // Ensure that spinning can't be clicked again while already running.
+
+        if (wheelSpinning == false) {
+          // Based on the power level selected adjust the number of spins for the wheel, the more times is has
+          // to rotate with the duration of the animation the quicker the wheel spins.
+          if (wheelPower == 1) {
+            theWheel.animation.spins = 3;
+          } else if (wheelPower == 2) {
+            theWheel.animation.spins = 8;
+          } else if (wheelPower == 3) {
+            theWheel.animation.spins = 15;
+          }
+
+          // Disable the spin button so can't click again while wheel is spinning.
+          document.getElementById("spin_button").src = "spin_off.png";
+          document.getElementById("spin_button").className = "";
+
+          // Begin the spin animation by calling startAnimation on the wheel object.
+          theWheel.startAnimation();
+
+          // Set to true so that power can't be changed and spin button re-enabled during
+          // the current animation. The user will have to reset before spinning again.
+          wheelSpinning = true;
+        }
+      }
+
+      // -------------------------------------------------------
+      // Function for reset button.
+      // -------------------------------------------------------
+
+      // -------------------------------------------------------
+      // Called when the spin animation has finished by the callback feature of the wheel because I specified callback in the parameters
+      // note the indicated segment is passed in as a parmeter as 99% of the time you will want to know this to inform the user of their prize.
+      // -------------------------------------------------------
+      function alertPrize(indicatedSegment) {
+        // Do basic alert of the segment text. You would probably want to do something more interesting with this information.
+        // alert("You have won " + indicatedSegment.text);
+        // phoneNumber[inputField.value] = indicatedSegment.text
+        // insertRecord(inputField.value, indicatedSegment.text);
+        myToast(indicatedSegment);
+        saveData(inputField.value, indicatedSegment.text);
+      }
+    </script>
+  </body>
+</html>
