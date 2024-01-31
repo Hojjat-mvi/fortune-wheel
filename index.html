@@ -3,7 +3,7 @@
     <title>HTML5 Canvas Winning Wheel</title>
     <link rel="stylesheet" href="styles.css" type="text/css" />
     <script type="text/javascript" src="script.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
   </head>
 
   <body>
@@ -30,20 +30,7 @@
             <div class="power_controls">
               <br />
               <br />
-              <!-- <table class="power" cellpadding="10" cellspacing="0">
-                                <tr>
-                                    <th align="center">Power</th>
-                                </tr>
-                                <tr>
-                                    <td width="78" align="center" id="pw3" onClick="powerSelected(3);">High</td>
-                                </tr>
-                                <tr>
-                                    <td align="center" id="pw2" onClick="powerSelected(2);">Med</td>
-                                </tr>
-                                <tr>
-                                    <td align="center" id="pw1" onClick="powerSelected(1);">Low</td>
-                                </tr>
-                            </table> -->
+
               <br />
               <img
                 id="spin_button"
@@ -175,20 +162,6 @@
       let wheelPower = 0;
       let wheelSpinning = false;
 
-      // -------------------------------------------------------
-      // Function to handle the onClick on the power buttons.
-      // -------------------------------------------------------
-      // function powerSelected(powerLevel) {
-      //   // Ensure that power can't be changed while wheel is spinning.
-      //   if (wheelSpinning == false) {
-      //     // Light up the spin button by changing it's source image and adding a clickable class to it.
-      //   }
-      // }
-
-      // -------------------------------------------------------
-      // Click handler for spin button.
-      // -------------------------------------------------------
-
       document.getElementById("spin_button").src = "spin_on.png";
       document.getElementById("spin_button").className = "clickable";
 
@@ -212,26 +185,15 @@
 
           // Begin the spin animation by calling startAnimation on the wheel object.
           theWheel.startAnimation();
-
+          debugger;
           // Set to true so that power can't be changed and spin button re-enabled during
           // the current animation. The user will have to reset before spinning again.
           wheelSpinning = true;
         }
       }
 
-      // -------------------------------------------------------
-      // Function for reset button.
-      // -------------------------------------------------------
-
-      // -------------------------------------------------------
-      // Called when the spin animation has finished by the callback feature of the wheel because I specified callback in the parameters
-      // note the indicated segment is passed in as a parmeter as 99% of the time you will want to know this to inform the user of their prize.
-      // -------------------------------------------------------
       function alertPrize(indicatedSegment) {
         // Do basic alert of the segment text. You would probably want to do something more interesting with this information.
-        // alert("You have won " + indicatedSegment.text);
-        // phoneNumber[inputField.value] = indicatedSegment.text
-        // insertRecord(inputField.value, indicatedSegment.text);
         myToast(indicatedSegment);
         saveData(inputField.value, indicatedSegment.text);
       }
