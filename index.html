@@ -4,13 +4,20 @@
     <link rel="stylesheet" href="styles.css" type="text/css" />
     <script type="text/javascript" src="script.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   </head>
 
   <body>
     <div align="center">
+      <div class="whole-component"></div>
       <div class="modal" id="myModal">
         <div class="modal-content">
           <h2>خوش آمدید</h2>
+          <input
+            type="text"
+            id="nameField"
+            placeholder="نام و نام خانوادگی خود را وارد کنید"
+          />
           <input
             type="number"
             id="inputField"
@@ -26,21 +33,6 @@
 
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td>
-            <div class="power_controls">
-              <br />
-              <br />
-
-              <br />
-              <img
-                id="spin_button"
-                src="spin_off.png"
-                alt="Spin"
-                onClick="startSpin();"
-              />
-              <br /><br />
-            </div>
-          </td>
           <td
             width="438"
             height="582"
@@ -56,15 +48,31 @@
           </td>
         </tr>
       </table>
+      <div class="power_controls">
+        <br />
+        <br />
+
+        <br />
+        <img
+          id="spin_button"
+          src="spin_off.png"
+          alt="Spin"
+          onClick="startSpin();"
+        />
+        <br /><br />
+      </div>
       <div id="snackbar"><p id="toastMessage"></p></div>
     </div>
 
     <script>
       // Create new wheel object specifying the parameters at creation time.
 
+
+
       var phoneNumber = {};
       var modal = document.getElementById("myModal");
       var inputField = document.getElementById("inputField");
+      var nameField = document.getElementById("nameField");
       var submitButton = document.getElementById("submitButton");
       const errors = document.getElementById("errors");
 
@@ -80,6 +88,10 @@
           !inputField.value.trim() ||
           check_phone(inputField.value) !== true ||
           getData(inputField.value);
+      });
+
+      nameField.addEventListener("input", function () {
+        submitButton.disabled = nameField.value < 5 || nameField > 20;
       });
 
       function submitForm() {
@@ -185,7 +197,7 @@
 
           // Begin the spin animation by calling startAnimation on the wheel object.
           theWheel.startAnimation();
-          debugger;
+          
           // Set to true so that power can't be changed and spin button re-enabled during
           // the current animation. The user will have to reset before spinning again.
           wheelSpinning = true;
@@ -195,7 +207,24 @@
       function alertPrize(indicatedSegment) {
         // Do basic alert of the segment text. You would probably want to do something more interesting with this information.
         myToast(indicatedSegment);
-        saveData(inputField.value, indicatedSegment.text);
+        // saveData(inputField.value, indicatedSegment.text);
+
+
+        async function postData(nF,pN,iS) {
+          try {
+            var res = await axios.post("https://fw-server.vercel.app/api/users", {
+              name: nF.value,
+              phoneNumber: pN.value,
+              award: iS.text,
+            });
+            console.log(res.data);
+          } catch (error) {
+            console.log(error);
+          }
+        }
+
+      postData(nameField,inputField,indicatedSegment)
+
       }
     </script>
   </body>
