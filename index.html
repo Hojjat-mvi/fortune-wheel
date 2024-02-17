@@ -5,6 +5,7 @@
     <script type="text/javascript" src="script.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/realm-web/dist/bundle.iife.js"></script>
   </head>
 
   <body>
@@ -20,8 +21,13 @@
           />
           <input
             type="number"
-            id="inputField"
+            id="numberField"
             placeholder="شماره تلفن خود را وارد کنید"
+          />
+          <input
+            type="text"
+            id="cityField"
+            placeholder="شهر خود را وارد کنید"
           />
           <button id="submitButton" onclick="submitForm()" disabled>
             تایید
@@ -67,14 +73,34 @@
     <script>
       // Create new wheel object specifying the parameters at creation time.
 
-
-
       var phoneNumber = {};
+      const app = new Realm.App({ id: "data-khhgl" });
       var modal = document.getElementById("myModal");
-      var inputField = document.getElementById("inputField");
+      var numberField = document.getElementById("numberField");
       var nameField = document.getElementById("nameField");
+      var cityField = document.getElementById("cityField");
       var submitButton = document.getElementById("submitButton");
       const errors = document.getElementById("errors");
+
+      async function login() {
+        async function loginEmailPassword(email, password) {
+          // Create an email/password credential
+          const credentials = Realm.Credentials.emailPassword(email, password);
+          // Authenticate the user
+          const user = await app.logIn(credentials);
+          // 'App.currentUser' updates to match the logged in user
+          console.assert(user.id === app.currentUser.id);
+          return user;
+        }
+
+        var userTK = await loginEmailPassword(
+          "etommy234@gmail.com",
+          "a1a2a3a4"
+        );
+        localStorage.setItem("token", userTK.accessToken);
+      }
+
+      login();
 
       const check_phone = (number) => {
         var regex = new RegExp("^(\\+98|0)?9\\d{9}$");
@@ -82,16 +108,15 @@
         return result;
       };
 
-      inputField.addEventListener("input", function () {
+      numberField.addEventListener("input", function () {
         // Enable the button only if the input is not empty
         submitButton.disabled =
-          !inputField.value.trim() ||
-          check_phone(inputField.value) !== true ||
-          getData(inputField.value);
-      });
-
-      nameField.addEventListener("input", function () {
-        submitButton.disabled = nameField.value < 5 || nameField > 20;
+          !numberField.value.trim() ||
+          check_phone(numberField.value) !== true ||
+          nameField.value.length < 5 ||
+          nameField.value.length > 20 ||
+          !cityField.value.trim() ||
+          getData(numberField.value);
       });
 
       function submitForm() {
@@ -100,7 +125,7 @@
 
       function openModal() {
         modal.style.display = "flex";
-        inputField.focus();
+        numberField.focus();
       }
 
       function closeModal() {
@@ -197,7 +222,7 @@
 
           // Begin the spin animation by calling startAnimation on the wheel object.
           theWheel.startAnimation();
-          
+
           // Set to true so that power can't be changed and spin button re-enabled during
           // the current animation. The user will have to reset before spinning again.
           wheelSpinning = true;
@@ -206,25 +231,48 @@
 
       function alertPrize(indicatedSegment) {
         // Do basic alert of the segment text. You would probably want to do something more interesting with this information.
+        const token = localStorage.getItem("token");
         myToast(indicatedSegment);
-        // saveData(inputField.value, indicatedSegment.text);
+        saveData(numberField.value, indicatedSegment.text);
 
-
-        async function postData(nF,pN,iS) {
+        const postData = async (name, phoneNumber, indicatedSegment, city) => {
           try {
-            var res = await axios.post("https://fw-server.vercel.app/api/users", {
-              name: nF.value,
-              phoneNumber: pN.value,
-              award: iS.text,
-            });
-            console.log(res.data);
+            const data = {
+              collection: "users",
+              database: "FW_database",
+              dataSource: "Cluster0",
+              document: {
+                name: name,
+                phoneNumber: phoneNumber,
+                award: indicatedSegment.text,
+                city: city,
+              },
+            };
+
+            const config = {
+              method: "post",
+              url: "https://eu-central-1.aws.data.mongodb-api.com/app/data-khhgl/endpoint/data/v1/action/insertOne",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Request-Headers": "*",
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify(data),
+            };
+
+            const response = await axios(config);
+            console.log(JSON.stringify(response.data));
           } catch (error) {
-            console.log(error);
+            console.error(error);
           }
-        }
+        };
 
-      postData(nameField,inputField,indicatedSegment)
-
+        postData(
+          nameField.value,
+          numberField.value,
+          indicatedSegment,
+          cityField.value
+        );
       }
     </script>
   </body>
